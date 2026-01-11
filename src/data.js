@@ -232,11 +232,11 @@ export const schemes = [
 
     eligibility: {
       gender: ["male", "female"],
-      ageGroup: ["60+"],
-      occupation: ["elderly", "unemployed","farmer","homemaker","disabled"],
+      ageGroup: ["60+", "below18",  "18-35", "36-59"],
+      occupation: ["elderly", "unemployed","farmer","homemaker","student"],
       income: ["low","high","mid"],
       area: ["rural", "urban"],
-      disability: ["yes", "no"]
+      disability: ["yes"]
     },
 
     officialLink: "https://www.aasara.telangana.gov.in"
@@ -262,7 +262,7 @@ export const schemes = [
     eligibility: {
       gender: ["male", "female"],
       ageGroup: ["any"],
-      occupation: ["elderly", "unemployed"],
+      occupation: ["elderly", "unemployed","farmer","homemaker"],
       income: ["low"],
       area: ["rural", "urban"],
       disability: ["yes", "no"]

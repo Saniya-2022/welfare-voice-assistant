@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { schemes } from "./data";
 import "./style.css";
 
-
 /* ---------- IMAGES ---------- */
 
 import aasara from "./assets/schemes/aasara.jpg";
@@ -21,6 +20,10 @@ import rythubharosa from "./assets/schemes/rythubharosa.jpg";
 import tspostmatric from "./assets/schemes/ts-postmatric.jpg";
 /* ---------- SCHEMES CONTEXT FOR AI ---------- */
 
+
+
+
+/* ---------- SCHEME IMAGES MAP ---------- */
 const schemeImages = {
   aasara,
   aicte,
@@ -156,9 +159,6 @@ export default function App() {
   const [activeScheme, setActiveScheme] = useState(null);
  const [autoPlay, setAutoPlay] = useState(false);
 const [autoIndex, setAutoIndex] = useState(0);
-const [chatInput, setChatInput] = useState("");
-const [chatResponse, setChatResponse] = useState("");
-const [loadingAI, setLoadingAI] = useState(false);
 
  
 const [introSpoken, setIntroSpoken] = useState(false);
@@ -199,6 +199,8 @@ const eligibleSchemes = schemes.filter((s) => {
   );
 });
 
+/* ================= QUESTION VOICE====*============================ */
+ 
 
   /* ---------- AUTO QUESTION VOICE ---------- */
   /* ---------- AUTO SPEAK QUESTION (MULTILINGUAL) ---------- */
@@ -239,7 +241,14 @@ useEffect(() => {
 }, [step, eligibleSchemes.length, lang, introSpoken]);
 
   /* ================= GEMINI FUNCTION (ADD HERE) ================= */
- 
+
+
+
+
+
+
+   
+
 const buildAIContext = () => {
   const profile = `
 User Profile:
@@ -289,6 +298,7 @@ const copyUserDetailsToClipboard = async () => {
     alert("Clipboard access failed");
   }
 };
+
 
 
 /* ================= AUTO SCHEME EXPLANATION ================= */
@@ -359,137 +369,127 @@ const findMentionedScheme = (text) => {
     (s.name.hi && lowerText.includes(s.name.hi))
   );
 };
-
+ 
 // ================= AI VOICE INPUT =================
+if (step === 0) {
+  return (
+    <div className="home-wrap">
 
+      <div className="home-card">
 
-const handleAskAI = async () => {
-  // If user asks nothing → list eligible schemes
-  if (!chatInput.trim()) {
-    setChatResponse(
-      eligibleSchemes
-        .map((s, i) => `${i + 1}. ${s.name[lang]} – ${s.benefit[lang]}`)
-        .join("\n")
-    );
-    return;
-  }
+        <h1 className="title-main"><b>Welfare Assistant</b></h1>
 
-  const languageInstruction =
-    lang === "te"
-      ? "Answer ONLY in Telugu language."
-      : lang === "hi"
-      ? "Answer ONLY in Hindi language."
-      : "Answer ONLY in English language.";
+        <p className="subtitle-main">
+          {lang === "te"
+            ? "మీ రాష్ట్ర & కేంద్ర సంక్షేమ పథకాలు తెలుసుకోండి"
+            : lang === "hi"
+            ? "अपने राज्य और केंद्र की कल्याण योजनाएँ जानें"
+            : "Explore welfare schemes tailored for you"}
+        </p>
 
-  setLoadingAI(true);
-
-  const mentionedScheme = findMentionedScheme(chatInput);
-  let prompt = "";
-
-  if (mentionedScheme) {
-    // 🎯 Specific scheme explanation
-    prompt = `
-You are a Government Welfare Assistant for India and Telangana.
-
-${languageInstruction}
-
-Explain this government scheme clearly:
-
-Scheme Name: ${mentionedScheme.name.en}
-Benefits: ${mentionedScheme.benefit.en}
-Official Website: ${mentionedScheme.officialLink}
-
-User Question:
-"${chatInput}"
-
-Explain:
-- Who is eligible
-- What benefits they get
-- How to apply
-`;
-  } else {
-    // 📋 General eligibility response
-    prompt = `
-You are a Government Welfare Assistant for India and Telangana.
-
-${languageInstruction}
-
-User Profile:
-- Gender: ${user.gender}
-- Age Group: ${user.ageGroup}
-- Occupation: ${user.occupation}
-- Income: ${user.income}
-- Area: ${user.area}
-- Disability: ${user.disability}
-
-Eligible Schemes:
-${eligibleSchemes
-  .map((s, i) => `${i + 1}. ${s.name.en} – ${s.benefit.en}`)
-  .join("\n")}
-
-User Question:
-"${chatInput}"
-
-Answer clearly. Do NOT say "shown above".
-`;
-  }
-
-  try {
-    const reply = await askGemini(prompt);
-    setChatResponse(reply);
-    speak(reply); // 🔊 voice output
-  } catch (error) {
-    setChatResponse(
-      lang === "te"
-        ? "క్షమించండి, ప్రస్తుతం AI అందుబాటులో లేదు."
-        : lang === "hi"
-        ? "क्षमा करें, AI अभी उपलब्ध नहीं है।"
-        : "Sorry, AI service is temporarily unavailable."
-    );
-  } finally {
-    setLoadingAI(false);
-  }
-};
-
-
-  /* ---------- HOME PAGE ---------- */
-  if (step === 0) {
-    return (
-      <div className="page center">
-        <div className="card center">
-          <h1>{TEXT.title[lang]}</h1>
+        <div className="row-inputs">
           <input
-  type="text"
-  placeholder={
-    lang === "te"
-      ? "మీ పేరు నమోదు చేయండి"
-      : lang === "hi"
-      ? "अपना नाम दर्ज करें"
-      : "Enter your name"
-  }
-  value={user.name || ""}
-  onChange={(e) => setUser({ ...user, name: e.target.value })}
-  style={{ marginBottom: "12px" }}
-/>
+            className="input-field"
+            placeholder={
+              lang === "te" ? "మీ పేరు" :
+              lang === "hi" ? "नाम" :
+              "Enter your Name"
+            }
+            value={user.name}
+            onChange={(e) => setUser({ ...user, name: e.target.value })}
+          />
 
-          
-          
-          <select value={lang} onChange={(e) => setLang(e.target.value)}>
+          <select
+            className="input-field"
+            value={lang}
+            onChange={(e) => setLang(e.target.value)}
+          >
             <option value="en">English</option>
             <option value="te">తెలుగు</option>
             <option value="hi">हिंदी</option>
           </select>
-          <button className="primary" onClick={() => setStep(1)}>
-            {TEXT.start[lang]}
+        </div>
+
+        <div className="row-buttons">
+          <button className="btn-small" onClick={() => setStep(1)}>
+            📋 {lang === "te" ? "అర్హత" : lang === "hi" ? "पात्रता" : "Eligibility"}
+          </button>
+
+          <button className="btn-small" onClick={() => setStep(2)}>
+            📦 {lang === "te" ? "పథకాలు" : lang === "hi" ? "योजनाएँ" : "Schemes"}
           </button>
         </div>
+
       </div>
-    );
+
+    </div>
+  );
+}
+
+const normalizeAnswer = (key, text, lang) => {
+  text = text.toLowerCase().trim();
+
+  // --- Gender ---
+  if (key === "gender") {
+    if (["male", "man", "boy", "gents"].includes(text)) return "male";
+    if (["female", "woman", "girl", "ladies", "lady"].includes(text)) return "female";
+
+    // Telugu
+    if (["అబ్బాయి", "పురుషుడు"].includes(text)) return "male";
+    if (["అమ్మాయి", "స్త్రీ", "మహిళ"].includes(text)) return "female";
+
+    // Hindi
+    if (["पुरुष", "लड़का"].includes(text)) return "male";
+    if (["महिला", "लड़की"].includes(text)) return "female";
   }
+
+  // --- Yes / No (Disability) ---
+  if (key === "disability") {
+    if (["yes", "yeah", "yep", "haan", "हो", "అవును"].includes(text)) return "yes";
+    if (["no", "nah", "nahi", "कहीं", "కాదు"].includes(text)) return "no";
+  }
+
+  // --- Area ---
+  if (key === "area") {
+    if (["rural", "village", "gram"].includes(text)) return "rural";
+    if (["urban", "city", "town"].includes(text)) return "urban";
+
+    if (["గ్రామం"].includes(text)) return "rural";
+    if (["నగరం"].includes(text)) return "urban";
+
+    if (["गाँव"].includes(text)) return "rural";
+    if (["शहर"].includes(text)) return "urban";
+  }
+
+  // --- Income ---
+  if (key === "income") {
+    if (["low", "poor", "small"].includes(text)) return "low";
+    if (["middle", "mid", "average"].includes(text)) return "mid";
+    if (["high", "rich"].includes(text)) return "high";
+  }
+
+  // --- Age Group numeric ---
+  if (key === "ageGroup") {
+    let num = parseInt(text);
+    if (!isNaN(num)) {
+      if (num < 18) return "below18";
+      if (num >= 18 && num <= 35) return "18-35";
+      if (num >= 36 && num <= 59) return "36-59";
+      if (num >= 60) return "60+";
+    }
+  }
+
+  return text; // fallback
+};
+
+ 
+
+  /* ---------- HOME PAGE ---------- */
+ 
 /* ---------- VOICE INPUT (MIC) ---------- */
 const startListening = () => {
   if (!SR) {
-    alert("Speech recognition not supported in this browser");
+    alert("Speech recognition not supported");
     return;
   }
 
@@ -498,17 +498,30 @@ const startListening = () => {
   rec.start();
 
   rec.onresult = (e) => {
-    const spokenText = e.results[0][0].transcript.toLowerCase();
-    setUser({
-      ...user,
-      [QUESTIONS[qIndex].key]: spokenText
-    });
+    let spoken = e.results[0][0].transcript;
+    let key = QUESTIONS[qIndex].key;
+
+    let normalized = normalizeAnswer(key, spoken, lang);
+
+    setUser(prev => ({
+      ...prev,
+      [key]: normalized
+    }));
+
+    confirmSpeech(key, normalized); // 👈 NEW
   };
 
-  rec.onerror = () => {
-    alert("Voice input error. Please try again.");
+  rec.onend = () => {
+    setTimeout(() => {
+      if (qIndex < QUESTIONS.length - 1) {
+        setQIndex(qIndex + 1);
+      } else {
+        setStep(2);
+      }
+    }, 1400);
   };
 };
+
 
   /* ---------- QUESTIONS ---------- */
   if (step === 1) {
@@ -544,61 +557,8 @@ const startListening = () => {
       </div>
     );
   }
-  const startAIListening = () => {
-  if (!SR) {
-    alert("Speech Recognition not supported in this browser");
-    return;
-  }
+  
 
-  const recognition = new SR();
-  recognition.lang =
-    lang === "te" ? "te-IN" : lang === "hi" ? "hi-IN" : "en-IN";
-
-  recognition.start();
-
-  recognition.onresult = (event) => {
-    const spokenText = event.results[0][0].transcript;
-    setChatInput(spokenText); // puts voice text into textarea
-  };
-};
-
-
-/* ---------- AI CHATBOT PAGE ---------- */
-if (step === 3) {
-  return (
-    <div className="page center">
-      <div className="card" style={{ width: "90%", maxWidth: "700px" }}>
-
-        <h2>🤖 Welfare AI Assistant</h2>
-
-        <textarea
-          placeholder="Ask about any government scheme..."
-          value={chatInput}
-          onChange={(e) => setChatInput(e.target.value)}
-          rows={4}
-        />
-
-        <button onClick={startAIListening}>
-          🎤 Speak
-        </button>
-
-        <button className="primary" onClick={handleAskAI}>
-          Ask AI
-        </button>
-
-        <div className="ai-response">
-          <h3>AI Response:</h3>
-          <p>{chatResponse || "No response yet"}</p>
-        </div>
-
-        <button onClick={() => setStep(2)}>
-          ⬅ Back to Schemes
-        </button>
-
-      </div>
-    </div>
-  );
-}
 
   /* ---------- RESULTS ---------- */
   /* ---------- RESULTS ---------- */
@@ -656,13 +616,7 @@ return (
         </div>
       ))}
     </div>
-   <button
-  className="primary"
-  style={{ margin: "20px auto", display: "block" }}
-  onClick={() => setStep(3)}
->
-  🤖 Open AI Welfare Assistant
-</button>
+  
 </div>
 
 

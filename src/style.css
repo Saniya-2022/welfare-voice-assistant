@@ -4,10 +4,10 @@
 }
 
 body {
-  margin: 0;
-  font-family: "Segoe UI", Arial, sans-serif;
-  background-color: #f5f7fa;
-  color: #1f2937;
+  padding:50px;
+  margin: 50px;
+  background: linear-gradient(160deg, #d1d363, #51d0de);
+  min-height: 100vh;
 }
 
 /* ================= HERO / BACKGROUND ================= */
@@ -492,48 +492,117 @@ button {
 }
 
 /* Textarea */
-.ai-chat textarea {
-  width: 100%;
-  min-height: 80px;
+
+.home-container {
+  width: 750px;
+  max-width: 1100px;
+  margin: 0 auto;
+  margin-top: 70px;
+  padding: 40px;
+  background: rgb(147, 111, 111);
+  border-radius: 18px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+}
+.top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 60px;
+  margin: 2px 0;
+}
+
+.input-name {
+  width: 250px;
   padding: 12px;
-  margin-bottom: 14px;
   border-radius: 10px;
-  border: 1px solid #cceede;
-  font-size: 14px;
-}
-
-/* 🔵 AI BUTTON */
-.ai-chat button {
-  background: linear-gradient(135deg, #dfeb0a, #0fda08);
-  color: white;
-  width: auto;              /* 🔽 reduced width */
-  min-width: 100px;
-  padding: 10px 22px;       /* 🔽 reduced padding */
-  border: none;
-  border-radius: 30px;      /* 🔵 pill shape */
-  cursor: pointer;
+  border: 1px solid #d0d0d0;
   font-size: 15px;
-  font-weight: 600;
-  display: block;
-  margin: 0 auto;           /* center button */
-
-  /* ✨ glow effect */
-  box-shadow: 0 0 12px rgba(240, 91, 11, 0.5);
-  transition: all 0.3s ease;
 }
 
-/* ✨ Hover glow */
-.ai-chat button:hover {
-  box-shadow: 0 0 20px rgba(26, 115, 232, 0.9);
-  transform: scale(1.05);
-}
-
-/* AI reply box */
-.ai-reply {
-  margin-top: 16px;
-  background: white;
-  padding: 14px;
-  border-left: 4px solid #1a73e8;
+.input-lang {
+  width: 250px;
+  padding: 20px;
   border-radius: 10px;
+  font-size: 15px;
+}
+.popular-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: rgb(242, 232, 232);
+  cursor: pointer;
+  transition: 0.2s;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+.popular-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+}
+
+.home-wrap {
+  height: 100vh;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.home-card {
+  width: 480px;
+  background: white;
+  border-radius: 18px;
+  padding: 32px 30px;
+  box-shadow: 0 6px 28px rgba(0,0,0,0.12);
+  text-align: center;
+}
+
+.title-main {
+  font-size: 30px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.subtitle-main {
+  font-size: 15px;
+  color: #505050;
+  margin-bottom: 22px;
+}
+
+.row-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.input-field {
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #cfcfcf;
+  font-size: 15px;
+}
+
+.row-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.btn-small {
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: none;
+  background: #1c53e6;
+  color: white;
+  cursor: pointer;
   font-size: 14px;
+  font-weight: 600;
+  transition: 0.2s;
+}
+
+.btn-small:hover {
+  background: #083bbb;
 }
