@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { schemes } from "./data";
 import "./style.css";
 
@@ -163,6 +164,13 @@ const [autoIndex, setAutoIndex] = useState(0);
  
 const [introSpoken, setIntroSpoken] = useState(false);
 
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [chatMessages, setChatMessages] = useState([]);
+  const [chatInput, setChatInput] = useState("");
+  const [isLoadingChat, setIsLoadingChat] = useState(false);
+  const [isDictating, setIsDictating] = useState(false);
+  const chatEndRef = useRef(null);
+
   const [user, setUser] = useState({
     name: "",
     gender: "",
@@ -179,7 +187,7 @@ const [introSpoken, setIntroSpoken] = useState(false);
   synth.cancel();   // ✅ ADD THIS LINE
 
   const u = new SpeechSynthesisUtterance(text);
-  u.lang = lang === "te" ? "te-IN" : lang === "hi" ? "hi-IN" : "en-IN";
+  u.lang = lang === "te" ? "te-IN" : lang === "hi" ? "hi-IN" : "en-US";
   u.rate = 0.9;
 
   if (onEnd) u.onend = onEnd;
@@ -299,7 +307,85 @@ const copyUserDetailsToClipboard = async () => {
   }
 };
 
+/* ================= CHATBOT FUNCTIONALITY ================= */
+useEffect(() => {
+  if (chatEndRef.current) {
+    chatEndRef.current.scrollIntoView({ behavior: "smooth" });
+  }
+}, [chatMessages, isChatOpen]);
 
+const handleSendChatMessage = async () => {
+  if (!chatInput.trim()) return;
+
+  const newUserMsg = { role: "user", text: chatInput };
+  setChatMessages((prev) => [...prev, newUserMsg]);
+  setChatInput("");
+  setIsLoadingChat(true);
+
+  try {
+    const apiKey = process.env.REACT_APP_GEMINI_API_KEY;
+    if (!apiKey) {
+      setChatMessages((prev) => [
+        ...prev,
+        { role: "bot", text: "Error: Gemini API Key is missing. Please configure your .env file." }
+      ]);
+      return;
+    }
+
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+
+    // Build the system prompt using the existing AI Context generator
+    const systemPrompt = buildAIContext();
+    
+    // Determine language instruction
+    let langInstruction = "Please reply in English.";
+    if (lang === "te") langInstruction = "Please reply in Telugu (తెలుగు).";
+    if (lang === "hi") langInstruction = "Please reply in Hindi (हिंदी).";
+
+    const prompt = `
+System Instructions: ${systemPrompt}
+Additional Instructions: Act as a helpful welfare assistant chatbot. ${langInstruction}
+Keep your answer concise and easy to understand. Only reference schemes that the user is eligible for.
+
+User Query: ${newUserMsg.text}
+`;
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text();
+
+    setChatMessages((prev) => [...prev, { role: "bot", text }]);
+  } catch (error) {
+    console.error("Chat API Error:", error);
+    setChatMessages((prev) => [
+      ...prev,
+      { role: "bot", text: "Sorry, I encountered an error while processing your request. Please try again." }
+    ]);
+    } finally {
+      setIsLoadingChat(false);
+    }
+  };
+
+  const startChatDictation = () => {
+    if (!SR) {
+      alert("Speech recognition not supported in this browser.");
+      return;
+    }
+    const rec = new SR();
+    rec.lang = lang === "te" ? "te-IN" : lang === "hi" ? "hi-IN" : "en-US";
+    rec.start();
+    setIsDictating(true);
+    
+    rec.onresult = (e) => {
+      const spoken = e.results[0][0].transcript;
+      setChatInput((prev) => prev ? prev + " " + spoken : spoken);
+    };
+    
+    rec.onend = () => {
+      setIsDictating(false);
+    };
+  };
 
 /* ================= AUTO SCHEME EXPLANATION ================= */
 useEffect(() => {
@@ -373,7 +459,8 @@ const findMentionedScheme = (text) => {
 // ================= AI VOICE INPUT =================
 if (step === 0) {
   return (
-    <div className="home-wrap">
+    <>
+      <div className="home-wrap">
 
       <div className="home-card">
 
@@ -423,6 +510,7 @@ if (step === 0) {
       </div>
 
     </div>
+    </>
   );
 }
 
@@ -494,7 +582,7 @@ const startListening = () => {
   }
 
   const rec = new SR();
-  rec.lang = lang === "te" ? "te-IN" : lang === "hi" ? "hi-IN" : "en-IN";
+  rec.lang = lang === "te" ? "te-IN" : lang === "hi" ? "hi-IN" : "en-US";
   rec.start();
 
   rec.onresult = (e) => {
@@ -508,7 +596,7 @@ const startListening = () => {
       [key]: normalized
     }));
 
-    confirmSpeech(key, normalized); // 👈 NEW
+    // confirmSpeech(key, normalized); // 👈 NEW (commenting out since it's missing)
   };
 
   rec.onend = () => {
@@ -527,9 +615,10 @@ const startListening = () => {
   if (step === 1) {
     const q = QUESTIONS[qIndex];
     return (
-      <div className="page center">
-        <div className="card center">
-        <h2>{q.question[lang]}</h2>
+      <>
+        <div className="page center">
+          <div className="card center">
+          <h2>{q.question[lang]}</h2>
 
           <select
   value={user[QUESTIONS[qIndex].key]}
@@ -555,18 +644,19 @@ const startListening = () => {
           </div>
         </div>
       </div>
+      </>
     );
   }
   
 
 
   /* ---------- RESULTS ---------- */
-  /* ---------- RESULTS ---------- */
 return (
-  <div className="results-page">
+  <>
+    <div className="results-page">
 
-    {/* Header */}
-    <div className="results-header">
+      {/* Header */}
+      <div className="results-header">
       <h2>{TEXT.results[lang]}</h2>
 
       <button className="home-btn" onClick={goHome}>
@@ -616,10 +706,67 @@ return (
         </div>
       ))}
     </div>
+    {/* Chatbot Floating Widget */}
+    <div className="chatbot-wrapper">
+      {!isChatOpen ? (
+        <button className="chat-fab" onClick={() => setIsChatOpen(true)}>
+          💬 {lang === "te" ? "సహాయం అడగండి" : lang === "hi" ? "सहायता पूछें" : "Ask AI"}
+        </button>
+      ) : (
+        <div className="chat-window">
+          <div className="chat-header">
+            <h4>🤖 Welfare AI</h4>
+            <button className="chat-close" onClick={() => setIsChatOpen(false)}>✖</button>
+          </div>
+          
+          <div className="chat-messages">
+            {chatMessages.length === 0 && (
+              <p className="chat-welcome">
+                {lang === "te" 
+                  ? "నమస్కారం! నేను ఎలా సహాయపడగలను?" 
+                  : lang === "hi" 
+                  ? "नमस्ते! मैं आपकी कैसे मदद कर सकता हूँ?" 
+                  : "Hello! How can I help you today?"}
+              </p>
+            )}
+            {chatMessages.map((msg, idx) => (
+              <div key={idx} className={`chat-bubble ${msg.role === "user" ? "user-bubble" : "bot-bubble"}`}>
+                {msg.text}
+              </div>
+            ))}
+            {isLoadingChat && (
+              <div className="chat-bubble bot-bubble typing-indicator">
+                <span>.</span><span>.</span><span>.</span>
+              </div>
+            )}
+            <div ref={chatEndRef} />
+          </div>
+
+          <div className="chat-input-area">
+            <button 
+              className={`chat-mic-btn ${isDictating ? "recording" : ""}`} 
+              onClick={startChatDictation} 
+              title={lang === "te" ? "మాట్లాడండి" : lang === "hi" ? "बोलें" : "Use Microphone"}
+            >
+              🎤
+            </button>
+            <input 
+              type="text" 
+              placeholder={lang === "te" ? "ప్రశ్న అడగండి..." : lang === "hi" ? "कोई प्रश्न पूछें..." : "Ask a question..."} 
+              value={chatInput}
+              onChange={(e) => setChatInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSendChatMessage()}
+            />
+            <button className="chat-send-btn" onClick={handleSendChatMessage} disabled={isLoadingChat}>
+              {lang === "te" ? "పంపు" : lang === "hi" ? "भेजें" : "Send"}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
   
 </div>
-
-
+  </>
 );
 
 }
